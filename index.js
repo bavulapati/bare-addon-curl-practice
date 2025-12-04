@@ -1,3 +1,3 @@
 const binding = require('./binding')
 
-exports.hello = binding.hello
+exports.tcpConnect = binding.tcpConnect
