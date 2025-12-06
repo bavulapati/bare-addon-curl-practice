@@ -47,7 +47,6 @@ typedef struct {
   js_env_t *env;
   js_deferred_t *deferred;
   uv_buf_t buf;
-  uv_connect_t *req;
 } req_state;
 
 void
@@ -96,7 +95,6 @@ read_cb(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
       uv_close((uv_handle_t *) stream, close_cb);
     }
     free(state->buf.base, state->buf.len);
-    free(state->req, sizeof(*state->req));
     free(state, sizeof(*state));
   } else if (nread > 0) {
     state->buf.base = realloc(state->buf.base, nread + state->buf.len);
@@ -114,7 +112,6 @@ write_cb(uv_write_t *req, int status) {
   if (status < 0) {
     req_state *state = req->handle->data;
     reject_promise(state, (void *) uv_strerror(status));
-    free(state->req, sizeof(*(state->req)));
     free(state, sizeof(*state));
     uv_close((void *) req->handle, close_cb);
   }
@@ -149,6 +146,7 @@ connect_cb(uv_connect_t *req, int status) {
     free(w_req, sizeof(*w_req));
     goto cleanup;
   }
+  free(req, sizeof(*req));
   return;
 
 cleanup:
@@ -293,7 +291,6 @@ bare_addon_tcp_connect(js_env_t *env, js_callback_info_t *info) {
   }
   memset(state, 0, sizeof(*state));
   state->env = env;
-  state->req = req;
   handle->data = state;
 
   err = js_create_promise(env, &state->deferred, &promise);
