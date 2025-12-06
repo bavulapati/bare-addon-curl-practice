@@ -238,6 +238,13 @@ bare_addon_tcp_connect(js_env_t *env, js_callback_info_t *info) {
     goto cleanup;
   }
 
+  struct sockaddr_in addr;
+  err = uv_ip4_addr(host, port, &addr);
+  if (err != 0) {
+    js_throw_error(env, NULL, uv_strerror(err));
+    goto cleanup;
+  }
+
   size_t msg_len;
 
   err = js_get_value_string_utf8(env, argv[2], NULL, 0, &msg_len);
@@ -269,13 +276,6 @@ bare_addon_tcp_connect(js_env_t *env, js_callback_info_t *info) {
     goto cleanup;
   }
 
-  struct sockaddr_in addr;
-  err = uv_ip4_addr(host, port, &addr);
-  if (err != 0) {
-    js_throw_error(env, NULL, uv_strerror(err));
-    goto cleanup;
-  }
-
   req = malloc(sizeof(*req));
   if (req == NULL) {
     js_throw_error(env, NULL, "Error allocating memory");
@@ -293,6 +293,7 @@ bare_addon_tcp_connect(js_env_t *env, js_callback_info_t *info) {
     js_throw_error(env, NULL, "Error allocating memory");
     goto cleanup;
   }
+  memset(state, 0, sizeof(*state));
   state->env = env;
   state->req = req;
   handle->data = state;
