@@ -24,6 +24,9 @@ test('validate function signature', async (t) => {
   t.exception.all(() => {
     tcpConnect('127.0.0.1', '4242', 619)
   }, 'expects message as string')
+  t.exception.all(() => {
+    tcpConnect('127.0.0.1', 4242, 619)
+  }, 'expects message as string')
   await t.exception(async () => {
     await tcpConnect('127.0.0.1', 4241, 'hello\r\n\r\n')
   })
@@ -38,6 +41,7 @@ function waitForServer(server) {
     server.on('listening', done).on('error', done)
   })
 }
+
 test('should receive data when server is accepting connections', async (t) => {
   const tcp = require('bare-tcp')
   const server = tcp.createServer()
