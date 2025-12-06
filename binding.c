@@ -1,5 +1,3 @@
-#include "uv.h"
-#include "uv/unix.h"
 #include <assert.h>
 #include <bare.h>
 #include <js.h>
