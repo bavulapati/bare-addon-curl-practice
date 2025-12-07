@@ -43,15 +43,14 @@ debug_mem_free(void *memory, size_t size, const char *func, uint line) {
 
 #endif
 
-// TODO: follow the naming convention of struct req_state_t
 typedef struct {
   js_env_t *env;
   js_deferred_t *deferred;
   uv_buf_t buf;
-} req_state;
+} state_t;
 
 void
-reject_promise(req_state *state, utf8_t *str) {
+reject_promise(state_t *state, utf8_t *str) {
   js_value_t *resolution;
   js_value_t *message;
   js_handle_scope_t *handle_scope;
@@ -64,7 +63,7 @@ reject_promise(req_state *state, utf8_t *str) {
 }
 
 void
-resolve_promise(req_state *state) {
+resolve_promise(state_t *state) {
   js_value_t *resolution;
   js_handle_scope_t *handle_scope;
 
@@ -87,7 +86,7 @@ alloc_cb(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
 }
 void
 read_cb(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
-  req_state *state = stream->data;
+  state_t *state = stream->data;
   if (nread < 0) {
     if (nread == UV_EOF) {
       resolve_promise(state);
@@ -112,7 +111,7 @@ read_cb(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 void
 write_cb(uv_write_t *req, int status) {
   if (status < 0) {
-    req_state *state = req->handle->data;
+    state_t *state = req->handle->data;
     reject_promise(state, (void *) uv_strerror(status));
     free(state, sizeof(*state));
     uv_close((void *) req->handle, close_cb);
@@ -126,7 +125,7 @@ write_cb(uv_write_t *req, int status) {
 void
 connect_cb(uv_connect_t *req, int status) {
   uv_handle_t *handle = (uv_handle_t *) req->handle;
-  req_state *state = handle->data;
+  state_t *state = handle->data;
   if (status < 0) {
     goto cleanup;
   }
@@ -165,7 +164,7 @@ bare_addon_tcp_connect(js_env_t *env, js_callback_info_t *info) {
   js_value_t *promise = NULL;
   uv_connect_t *req = NULL;
   uv_tcp_t *handle = NULL;
-  req_state *state = NULL;
+  state_t *state = NULL;
   char *msg = NULL;
   char *host = NULL;
   int err;
