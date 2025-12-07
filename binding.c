@@ -43,6 +43,7 @@ debug_mem_free(void *memory, size_t size, const char *func, uint line) {
 
 #endif
 
+// TODO: follow the naming convention of struct req_state_t
 typedef struct {
   js_env_t *env;
   js_deferred_t *deferred;
@@ -68,6 +69,7 @@ resolve_promise(req_state *state) {
   js_handle_scope_t *handle_scope;
 
   js_open_handle_scope(state->env, &handle_scope);
+  // TODO: add assert
   js_create_string_utf8(state->env, (void *) state->buf.base, state->buf.len, &resolution);
   js_resolve_deferred(state->env, state->deferred, resolution);
   js_close_handle_scope(state->env, handle_scope);
@@ -217,10 +219,12 @@ bare_addon_tcp_connect(js_env_t *env, js_callback_info_t *info) {
   }
 
   host = malloc(host_len + 1);
+  // TODO: Nuke the NULL check of memory
   if (host == NULL) {
     js_throw_error(env, NULL, "Error allocating memory");
     goto cleanup;
   }
+  // TODO: verify if memset is necessary by reading the bare code
   memset(host, 'G', host_len);
   host[host_len] = '\0';
   err = js_get_value_string_utf8(env, argv[0], (utf8_t *) host, host_len + 1, NULL);
@@ -241,6 +245,9 @@ bare_addon_tcp_connect(js_env_t *env, js_callback_info_t *info) {
     goto cleanup;
   }
 
+  // TODO: free host as early as possible like this
+  free(host, host_len + 1);
+  host = NULL;
   size_t msg_len;
 
   err = js_get_value_string_utf8(env, argv[2], NULL, 0, &msg_len);
@@ -280,7 +287,8 @@ bare_addon_tcp_connect(js_env_t *env, js_callback_info_t *info) {
   req->data = msg;
   err = uv_tcp_connect(req, handle, (struct sockaddr *) &addr, connect_cb);
   if (err != 0) {
-    js_throw_error(env, NULL, uv_strerror(err));
+    err = js_throw_error(env, NULL, uv_strerror(err));
+    assert(err == 0);
     goto cleanup;
   }
 
@@ -289,16 +297,17 @@ bare_addon_tcp_connect(js_env_t *env, js_callback_info_t *info) {
     js_throw_error(env, NULL, "Error allocating memory");
     goto cleanup;
   }
+  // TODO: just set buf.len to 0 instead of memset
+  // *state = {.buf = {.len = 0}}; // TODO: verify if default init works
   memset(state, 0, sizeof(*state));
   state->env = env;
   handle->data = state;
 
   err = js_create_promise(env, &state->deferred, &promise);
-  if (err != 0) {
-    goto cleanup;
-  } else {
-    goto clean_host;
-  }
+  assert(err == 0);
+  // TODO: check if libjs API failures are practical.
+
+  return promise;
 
 cleanup:
   if (state != NULL) {
@@ -313,7 +322,6 @@ cleanup:
   if (msg != NULL) {
     free(msg, msg_len + 1);
   }
-clean_host:
   if (host != NULL) {
     free(host, host_len + 1);
   }
