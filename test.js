@@ -52,7 +52,7 @@ test('should receive data when server is accepting connections', async (t) => {
     c.on('close', () => {
       // console.log('server connection closed')
     })
-    c.end('hello\r\n')
+    c.end('，支持兌換為淘寶現金紅包，買淘寶省錢又省心😂\r\n')
   })
   server.on('error', (err) => {
     t.fail('server error')
@@ -64,7 +64,11 @@ test('should receive data when server is accepting connections', async (t) => {
   await waitForServer(server)
 
   const { port } = server.address()
-  await t.execution(tcpConnect('127.0.0.1', port, 'hello\r\n'))
+  await t.execution(async () => {
+    const response = await tcpConnect('127.0.0.1', port, 'hello\r\n')
+    console.log('-----------------------------')
+    console.log(response)
+  })
   server.close()
 })
 test('remote server', async (t) => {
