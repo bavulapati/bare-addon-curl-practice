@@ -232,8 +232,7 @@ bare_addon_tcp_connect(js_env_t *env, js_callback_info_t *info) {
   }
 
   state = malloc(sizeof(*state));
-  state->buf.base = NULL;
-  state->buf.len = 0;
+  *state = (state_t) {};
   state->env = env;
   handle->data = state;
 
